@@ -14,11 +14,34 @@ pnpm start            # Iniciar servidor de produção
 pnpm lint             # Executar ESLint
 pnpm test             # Executar testes unitários (Vitest) - a configurar
 pnpm test:e2e         # Executar testes E2E (Playwright) - a configurar
-
-# Shadcn UI
-pnpm dlx shadcn@latest add <componente>    # Adicionar componente
-pnpm dlx shadcn@latest diff                # Ver diferenças de componentes
 ```
+
+### Shadcn UI (pnpm dlx)
+
+```bash
+# Informações do projeto
+pnpm dlx shadcn@latest info                        # Ver configuração e componentes instalados
+
+# Adicionar componentes
+pnpm dlx shadcn@latest add button                  # Adicionar componente específico
+pnpm dlx shadcn@latest add button card dialog      # Adicionar múltiplos componentes
+pnpm dlx shadcn@latest add @magicui/shimmer-button # Adicionar de registry externo
+pnpm dlx shadcn@latest add --all                   # Adicionar todos os componentes
+
+# Preview antes de adicionar (RECOMENDADO)
+pnpm dlx shadcn@latest add button --dry-run        # Ver o que será alterado
+pnpm dlx shadcn@latest add button --diff           # Ver diferenças dos ficheiros
+pnpm dlx shadcn@latest add button --view           # Ver conteúdo dos ficheiros
+
+# Pesquisar componentes
+pnpm dlx shadcn@latest search @shadcn -q "sidebar" # Pesquisar em registries
+pnpm dlx shadcn@latest docs button dialog          # Obter URLs de documentação
+
+# Inicializar/Reconfigurar
+pnpm dlx shadcn@latest init --preset <code>        # Inicializar com preset
+```
+
+> **Regra:** Sempre usar `--dry-run` ou `--diff` antes de sobrescrever componentes existentes.
 
 ---
 
