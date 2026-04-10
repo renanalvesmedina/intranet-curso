@@ -1,136 +1,93 @@
-# Intranet Corporativa Multi-tenant
+# Orientação para agentes (repositório)
 
-Este repositório contém uma **intranet corporativa multi-tenant** que serve várias organizações com isolamento de dados. Antes de implementar qualquer funcionalidade, compreenda o contexto abaixo.
+## Âmbito
 
----
+Antes de alterar código, identifica onde estás a trabalhar:
 
-## Gerenciador de Pacotes
+- **`apps/web`** — segue [apps/web/AGENTS.md](apps/web/AGENTS.md).
+- **`apps/notification-service`** — segue [apps/notification-service/AGENTS.md](apps/notification-service/AGENTS.md).
+- **Raiz, `docs/`, ou várias apps** — usa este ficheiro e os documentos abaixo; não dupliques regras que já estão nos AGENTS por app.
 
-Este projeto usa **pnpm**. Todos os comandos devem ser executados com pnpm.
+## Comandos (pnpm)
 
-```bash
-# Instalar dependências (na raiz ou em cada app)
-pnpm install
+Gestor de pacotes: **pnpm**. Usa sempre `pnpm` (não `npm` nem `yarn`).
 
-# Executar comando em app específica
-pnpm --filter web <comando>
-pnpm --filter notification-service <comando>
-```
+Da **raiz do repositório**, com `-C` para a pasta da app:
 
----
+| Acção | `apps/web` | `apps/notification-service` |
+|--------|------------|------------------------------|
+| Instalar dependências | `pnpm -C apps/web install` | `pnpm -C apps/notification-service install` (quando existir `package.json`) |
+| Servidor de desenvolvimento | `pnpm -C apps/web dev` | Ver [apps/notification-service/AGENTS.md](apps/notification-service/AGENTS.md) quando o serviço tiver scripts definidos |
+| Build | `pnpm -C apps/web build` | Idem |
+| Arranque (produção) | `pnpm -C apps/web start` (executar após `build`) | Idem |
+| Lint | `pnpm -C apps/web lint` | Idem |
+| Testes | `pnpm -C apps/web test` quando existir script `test` em `package.json` | Idem |
 
-## Estrutura do Monorepo
+Em alternativa, entra em `apps/<app>` e corre os mesmos scripts sem prefixo (ex.: `pnpm dev`, `pnpm build`). Detalhe por app: [apps/web/AGENTS.md](apps/web/AGENTS.md), [apps/notification-service/AGENTS.md](apps/notification-service/AGENTS.md).
 
-```
-apps/
-├── web/                    # Frontend Next.js (ver apps/web/AGENTS.md)
-└── notification-service/   # Serviço Fastify de notificações (ver apps/notification-service/AGENTS.md)
-packages/                   # Pacotes partilhados (criar apenas quando necessário)
-docs/                       # Documentação de produto e engenharia
-.agents/skills/             # Skills de agente para guiar desenvolvimento
-```
+## Mapa de documentos (`docs/`)
 
----
+Hierarquia alinhada a [docs/GOVERNANCE.md](docs/GOVERNANCE.md):
 
-## Princípios Críticos (nunca violar)
+| Documento | Função |
+|-----------|--------|
+| [docs/PROPOSAL.md](docs/PROPOSAL.md) | Produto: requisitos, perfis, MVP e fases |
+| [docs/PRD.md](docs/PRD.md) | Contexto de produto |
+| [docs/GOVERNANCE.md](docs/GOVERNANCE.md) | Governação: papéis, SoD, operação |
+| [docs/ENGINEERING.md](docs/ENGINEERING.md) | Stack, monorepo, princípios de implementação, ferramentas de teste |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Planta técnica: contentores, dados, RLS, fronteiras |
+| [docs/SECURITY.md](docs/SECURITY.md) | Segurança na aplicação: auth, multi-tenant, API, segredos |
+| [docs/QUALITY.md](docs/QUALITY.md) | Qualidade de código, testes, revisão, definição de pronto |
+| [docs/DELIVERY.md](docs/DELIVERY.md) | Git, PR para `develop`, CI, deploy |
+| [docs/UI_SPEC.md](docs/UI_SPEC.md) | Especificação de UI (implementação em `apps/web`) |
 
-### 1. Isolamento Multi-tenant com RLS
+Outros: [docs/BACKLOG.md](docs/BACKLOG.md), etc., conforme necessidade.
 
-- **Todas** as tabelas de negócio têm coluna `tenant_id`
-- **Row Level Security (RLS)** é a barreira obrigatória de isolamento — não apenas filtros na aplicação
-- O **cliente (browser) nunca é fonte de verdade** para `tenant_id` nem permissões
+## Criação de branches (Git Flow)
 
-### 2. Validação Server-side
+**Obrigatório:** ao criar branches, usa a skill [git-flow-branch-creator](.agents/skills/git-flow-branch-creator) e segue o modelo [Git Flow (nvie)](https://nvie.com/posts/a-successful-git-branching-model/).
 
-- Contexto de tenant e papel resolvem-se **no servidor** após autenticação
-- URL canónica **sem** subdomínio de tenant como identificador principal
-- Toda leitura/escrita de dados sensíveis passa por validação server-side
+Fluxo:
+1. Executa `git status` e `git diff` para analisar as alterações.
+2. Classifica o tipo de branch conforme a natureza das alterações:
+   - **feature/** — novas funcionalidades, melhorias não-críticas (branch de `develop`).
+   - **release-X.Y.Z** — preparação de release, versão, documentação final (branch de `develop`).
+   - **hotfix/** — correções críticas de produção, segurança (branch de `master`).
+3. Gera nome semântico em kebab-case: `feature/[ticket-]descricao`, `release-X.Y.Z`, `hotfix/descricao`.
+4. Cria a branch a partir da origem correcta (`develop` ou `master`).
 
-### 3. Sem API HTTP Pública
+Convenções de nome (exemplos):
+- `feature/user-authentication`
+- `feature/001-e01-interface-navegacao`
+- `release-1.0.0`
+- `hotfix/auth-security-patch`
 
-- **Não existe** API HTTP pública genérica para exposição de dados de tenant
-- Acesso através da aplicação autenticada e políticas alinhadas com RLS
+Para detalhes completos e edge cases, consulta a skill [git-flow-branch-creator](.agents/skills/git-flow-branch-creator/SKILL.md).
 
----
+## Regras transversais (resumo)
 
-## Modelo de Dados (encadeamento)
+- **Multi-tenant e RLS:** isolamento por `tenant_id` e políticas no PostgreSQL; ver [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) e [docs/SECURITY.md](docs/SECURITY.md).
+- **Autorização:** validar contexto de tenant e papel **no servidor**; o cliente não é fonte de verdade para `tenant_id` nem permissões ([docs/SECURITY.md](docs/SECURITY.md)).
+- **Entrega incremental:** fatias verticais testáveis, contratos estáveis (OpenAPI / tipos) quando houver integrações; ver [docs/ENGINEERING.md](docs/ENGINEERING.md).
+- **Git e CI:** branch por implementação seguindo Git Flow (ver secção acima), PR para `develop`, Vitest no PR como referência; ver [docs/DELIVERY.md](docs/DELIVERY.md).
+- **Qualidade:** regras de negócio testáveis (Vitest), critérios de revisão e DoD; ver [docs/QUALITY.md](docs/QUALITY.md).
 
-```
-auth.users (Supabase Auth) ↔ profiles (tenant + papel) ↔ colaboradores (ficha)
-```
+## Notificações in-app (fronteira)
 
-- Um colaborador pode existir **sem** conta de login (ficha vs utilizador)
-- Um utilizador tem **um único papel** no tenant
+Conforme [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md):
 
----
+- **Geração:** pg_cron → Supabase Edge Functions → **`apps/notification-service`** → inserção na base.
+- **Consulta na app web:** `apps/web` lê dados via Supabase (SELECT com RLS), **sem** integração HTTP direta do browser com o `notification-service` na fase inicial.
 
-## Perfis e RBAC
+## Skills do repositório (`.agents/skills/`)
 
-| Perfil | Plano | Âmbito |
-|--------|-------|--------|
-| **Master** | Plataforma | Gestão de tenants, apenas agregados numéricos (COUNT), sem dados pessoais |
-| **Admin** | Tenant | Configuração total, único que elimina eventos, cria qualquer papel |
-| **RH** | Tenant | Cadastro de pessoas, cria papéis exceto Admin, elimina apenas eventos próprios |
-| **Gestor** | Tenant | Diretório empresa + equipa, eventos só leitura |
-| **Colaborador** | Tenant | Diretório campos padrão, perfil self-service, eventos conforme audiência |
+| Skill | Pasta | Quando usar |
+|--------|--------|-------------|
+| **git-flow-branch-creator** | [.agents/skills/git-flow-branch-creator](.agents/skills/git-flow-branch-creator) | **Obrigatório** ao criar branches. Analisa alterações e cria branch seguindo Git Flow (feature/release/hotfix). |
+| **next-best-practices** | [.agents/skills/next-best-practices](.agents/skills/next-best-practices) | Código em `apps/web` (Next.js). **Secundário** à [documentação oficial Next.js](https://nextjs.org/docs); detalhes em [apps/web/AGENTS.md](apps/web/AGENTS.md). |
+| **shadcn** | [.agents/skills/shadcn](.agents/skills/shadcn) | `apps/web`: componentes Shadcn/ui, `components.json`, CLI `pnpm dlx shadcn@latest`, composição de UI. Ver [apps/web/AGENTS.md](apps/web/AGENTS.md). |
+| **vercel-react-best-practices** | [.agents/skills/vercel-react-best-practices](.agents/skills/vercel-react-best-practices) | Performance React/Next em `apps/web`. |
+| **web-design-guidelines** | [.agents/skills/web-design-guidelines](.agents/skills/web-design-guidelines) | Revisões de UI, a11y, UX em `apps/web`. |
+| **fastify-best-practices** | [.agents/skills/fastify-best-practices](.agents/skills/fastify-best-practices) | Código em `apps/notification-service`. |
 
-Consultar matriz completa em [docs/PROPOSAL.md](docs/PROPOSAL.md).
-
----
-
-## Hierarquia Documental
-
-| Documento | Propósito |
-|-----------|-----------|
-| [PROPOSAL.md](docs/PROPOSAL.md) | Regras de produto, RBAC, MVP vs fases |
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Planta técnica, contentores, RLS, fronteiras |
-| [SECURITY.md](docs/SECURITY.md) | Políticas de segurança na aplicação |
-| [ENGINEERING.md](docs/ENGINEERING.md) | Stack, convenções, testes |
-| [UI_SPEC.md](docs/UI_SPEC.md) | Padrões de interface, navegação, tokens |
-| [QUALITY.md](docs/QUALITY.md) | Código limpo, revisão, definição de pronto |
-| [DELIVERY.md](docs/DELIVERY.md) | Git flow, PR, CI/deploy |
-| [BACKLOG.md](docs/BACKLOG.md) | Épicos, user stories, critérios de aceite |
-
----
-
-## Skills de Agente
-
-Skills disponíveis em `.agents/skills/` para guiar desenvolvimento:
-
-### Para apps/web (por ordem de prioridade)
-
-| Prioridade | Fonte | Quando usar |
-|------------|-------|-------------|
-| 1 | `node_modules/next/dist/docs/` | **SEMPRE** consultar primeiro para APIs e convenções Next.js |
-| 2 | `next-best-practices/` | RSC, async patterns, metadata, error handling |
-| 3 | `vercel-react-best-practices/` | Performance, waterfalls, bundle, re-renders |
-| 4 | `shadcn/` | Componentes UI, forms, styling, icons |
-| 5 | `web-design-guidelines/` | Revisão UI/UX, acessibilidade |
-
-### Para apps/notification-service
-
-| Skill | Quando usar |
-|-------|-------------|
-| `fastify-best-practices/` | Plugins, routes, schemas, hooks, testing, deployment |
-
----
-
-## Linguagem Ubíqua
-
-Usar consistentemente nos nomes de módulos, funções e tipos:
-
-- **tenant** — organização/empresa
-- **colaborador** — pessoa com ficha no tenant
-- **evento** — acontecimento interno (GE)
-- **audiência** — âmbito de visibilidade (empresa, departamento, colaboradores específicos)
-- **departamento** — unidade organizacional (GD)
-- **perfil/papel** — Master, Admin, RH, Gestor, Colaborador
-
----
-
-## AGENTS.md por Aplicação
-
-Consultar instruções específicas:
-
-- [`apps/web/AGENTS.md`](apps/web/AGENTS.md) — Frontend Next.js
-- [`apps/notification-service/AGENTS.md`](apps/notification-service/AGENTS.md) — Serviço de notificações
+Para API e comportamento de bibliotecas, preferir documentação oficial atual (ex. regras do projeto com ctx7) quando aplicável.

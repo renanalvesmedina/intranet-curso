@@ -79,14 +79,14 @@ Examples of foundational tasks (adjust based on your project):
 
 **Independent Test**: [How to verify this story works on its own]
 
-### Tests for User Story 1 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 1 (TDD - Red Phase) ⚠️
 
-> **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
+> **NOTE: Write these tests FIRST, ensure they FAIL before implementation (Red-Green-Refactor)**
 
 - [ ] T010 [P] [US1] Contract test for [endpoint] in tests/contract/test_[name].py
 - [ ] T011 [P] [US1] Integration test for [user journey] in tests/integration/test_[name].py
 
-### Implementation for User Story 1
+### Implementation for User Story 1 (Green Phase)
 
 - [ ] T012 [P] [US1] Create [Entity1] model in src/models/[entity1].py
 - [ ] T013 [P] [US1] Create [Entity2] model in src/models/[entity2].py
@@ -95,7 +95,14 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T016 [US1] Add validation and error handling
 - [ ] T017 [US1] Add logging for user story 1 operations
 
-**Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
+### Mandatory Finalization for User Story 1 ✅
+
+> **CONSTITUTION REQUIREMENT: Every phase MUST end with unit tests and commit tasks**
+
+- [ ] T018 [US1] Run and validate all unit tests for User Story 1 (all tests must pass)
+- [ ] T019 [US1] Commit: "feat([feature]): [brief description of US1]"
+
+**Checkpoint**: At this point, User Story 1 should be fully functional, tested, and committed independently
 
 ---
 
@@ -105,19 +112,28 @@ Examples of foundational tasks (adjust based on your project):
 
 **Independent Test**: [How to verify this story works on its own]
 
-### Tests for User Story 2 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 2 (TDD - Red Phase) ⚠️
 
-- [ ] T018 [P] [US2] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T019 [P] [US2] Integration test for [user journey] in tests/integration/test_[name].py
+> **NOTE: Write these tests FIRST, ensure they FAIL before implementation (Red-Green-Refactor)**
 
-### Implementation for User Story 2
+- [ ] T020 [P] [US2] Contract test for [endpoint] in tests/contract/test_[name].py
+- [ ] T021 [P] [US2] Integration test for [user journey] in tests/integration/test_[name].py
 
-- [ ] T020 [P] [US2] Create [Entity] model in src/models/[entity].py
-- [ ] T021 [US2] Implement [Service] in src/services/[service].py
-- [ ] T022 [US2] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T023 [US2] Integrate with User Story 1 components (if needed)
+### Implementation for User Story 2 (Green Phase)
 
-**Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
+- [ ] T022 [P] [US2] Create [Entity] model in src/models/[entity].py
+- [ ] T023 [US2] Implement [Service] in src/services/[service].py
+- [ ] T024 [US2] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T025 [US2] Integrate with User Story 1 components (if needed)
+
+### Mandatory Finalization for User Story 2 ✅
+
+> **CONSTITUTION REQUIREMENT: Every phase MUST end with unit tests and commit tasks**
+
+- [ ] T026 [US2] Run and validate all unit tests for User Story 2 (all tests must pass)
+- [ ] T027 [US2] Commit: "feat([feature]): [brief description of US2]"
+
+**Checkpoint**: At this point, User Stories 1 AND 2 should both work independently, tested, and committed
 
 ---
 
@@ -127,18 +143,27 @@ Examples of foundational tasks (adjust based on your project):
 
 **Independent Test**: [How to verify this story works on its own]
 
-### Tests for User Story 3 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 3 (TDD - Red Phase) ⚠️
 
-- [ ] T024 [P] [US3] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T025 [P] [US3] Integration test for [user journey] in tests/integration/test_[name].py
+> **NOTE: Write these tests FIRST, ensure they FAIL before implementation (Red-Green-Refactor)**
 
-### Implementation for User Story 3
+- [ ] T028 [P] [US3] Contract test for [endpoint] in tests/contract/test_[name].py
+- [ ] T029 [P] [US3] Integration test for [user journey] in tests/integration/test_[name].py
 
-- [ ] T026 [P] [US3] Create [Entity] model in src/models/[entity].py
-- [ ] T027 [US3] Implement [Service] in src/services/[service].py
-- [ ] T028 [US3] Implement [endpoint/feature] in src/[location]/[file].py
+### Implementation for User Story 3 (Green Phase)
 
-**Checkpoint**: All user stories should now be independently functional
+- [ ] T030 [P] [US3] Create [Entity] model in src/models/[entity].py
+- [ ] T031 [US3] Implement [Service] in src/services/[service].py
+- [ ] T032 [US3] Implement [endpoint/feature] in src/[location]/[file].py
+
+### Mandatory Finalization for User Story 3 ✅
+
+> **CONSTITUTION REQUIREMENT: Every phase MUST end with unit tests and commit tasks**
+
+- [ ] T033 [US3] Run and validate all unit tests for User Story 3 (all tests must pass)
+- [ ] T034 [US3] Commit: "feat([feature]): [brief description of US3]"
+
+**Checkpoint**: All user stories should now be independently functional, tested, and committed
 
 ---
 
@@ -245,7 +270,14 @@ With multiple developers:
 - [P] tasks = different files, no dependencies
 - [Story] label maps task to specific user story for traceability
 - Each user story should be independently completable and testable
-- Verify tests fail before implementing
-- Commit after each task or logical group
+- **TDD MANDATORY**: Verify tests fail (Red) before implementing (Green), then Refactor
+- **CONSTITUTION**: Every US phase MUST end with unit tests task + commit task
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
+
+### Constitution Alignment
+
+This template follows the project constitution principles:
+- **Principle II (TDD)**: Tests written first, Red-Green-Refactor cycle
+- **Principle III (Independent Phases)**: Each US validatable without future dependencies
+- **Principle IV (Version Control)**: Mandatory test + commit tasks per phase

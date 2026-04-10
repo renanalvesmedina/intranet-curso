@@ -31,7 +31,19 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Verify alignment with `.specify/memory/constitution.md`:
+
+| Principle | Verification | Status |
+|-----------|--------------|--------|
+| **I. Código Limpo** | Nomes refletem linguagem ubíqua do domínio? Responsabilidade única? | ☐ |
+| **II. TDD** | Testes escritos antes da implementação? Red-Green-Refactor? | ☐ |
+| **III. Fases Independentes** | Cada fase validável sem depender de código futuro? | ☐ |
+| **IV. Versionamento** | Cada US termina com task de testes + commit? | ☐ |
+
+**Additional checks:**
+- [ ] Alinhamento com [PROPOSAL.md](docs/PROPOSAL.md) — requisitos e RBAC
+- [ ] Alinhamento com [SECURITY.md](docs/SECURITY.md) — validação server-side, RLS
+- [ ] Alinhamento com [ENGINEERING.md](docs/ENGINEERING.md) — stack, convenções
 
 ## Project Structure
 

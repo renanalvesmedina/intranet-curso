@@ -1,181 +1,50 @@
-# Serviço de Notificações — apps/notification-service
+# `apps/notification-service` — orientação para agentes
 
-## Comandos (pnpm)
+## Âmbito
 
-```bash
-# Desenvolvimento
-pnpm dev              # Iniciar servidor de desenvolvimento com watch
-pnpm start            # Iniciar servidor
+Este ficheiro aplica-se ao código sob **`apps/notification-service`**. Contexto do monorepo: [AGENTS.md](../../AGENTS.md) na raiz.
 
-# Build
-pnpm build            # Compilar TypeScript
+## Papel do serviço
 
-# Qualidade
-pnpm lint             # Executar ESLint
-pnpm test             # Executar testes unitários (Vitest)
-pnpm test:watch       # Executar testes em modo watch
+Conforme [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md):
 
-# Tipos
-pnpm typecheck        # Verificar tipos TypeScript
-```
-
-> **Nota:** Este serviço ainda não foi inicializado. Criar `package.json` com os scripts acima ao iniciar o desenvolvimento.
-
----
-
-## Propósito
-
-Serviço HTTP dedicado a **persistir notificações in-app** na base de dados. Recebe pedidos da orquestração (pg_cron + Edge Functions) e insere registos no PostgreSQL. **Não é chamado diretamente pelo browser** na fase inicial.
-
----
+- Invocado pela orquestração (**pg_cron** no PostgreSQL + **Supabase Edge Functions**), não pelo browser na fase inicial.
+- **Persiste** notificações (e metadados associados) **diretamente no PostgreSQL** (inserções nas tabelas de domínio).
+- Manter **contrato estável** (ex. OpenAPI, tipos partilhados) com as Edge Functions — ver também [docs/ENGINEERING.md](../../docs/ENGINEERING.md).
 
 ## Stack
 
-- **Framework:** Fastify (Node.js, TypeScript)
-- **Base de dados:** PostgreSQL (Supabase) com RLS
-- **Testes:** Vitest
+Fastify, Node.js, TypeScript — [docs/ENGINEERING.md](../../docs/ENGINEERING.md).
 
----
+## Comandos (pnpm)
 
-## Skill Obrigatória
+Gestor de pacotes: **pnpm**. Quando existir `package.json` nesta app, usar sempre `pnpm` para scripts (não `npm` nem `yarn`).
 
-| Skill | Quando usar |
-|-------|-------------|
-| `.agents/skills/fastify-best-practices/` | Plugins, routes, schemas, hooks, error handling, testing, deployment |
+Padrão esperado após o projeto estar configurado (ajustar nomes dos scripts ao `package.json` real):
 
-Consultar a skill antes de implementar rotas, validações ou plugins.
+| Acção | Comando (a partir de `apps/notification-service`) |
+|--------|-----------------------------------------------------|
+| Instalar dependências | `pnpm install` |
+| Desenvolvimento | `pnpm dev` (ou equivalente definido no manifesto) |
+| Build | `pnpm build` |
+| Arranque (produção) | `pnpm start` |
+| Testes | `pnpm test` (ex.: Vitest + `inject()` do Fastify) |
+| Lint | `pnpm lint` (quando existir) |
 
----
+Da raiz do repositório: `pnpm -C apps/notification-service <script>` (ex.: `pnpm -C apps/notification-service dev`).
 
-## Pipeline de Notificações
+## Confiança e multi-tenant
 
-```
-┌─────────────┐     ┌─────────────────┐     ┌──────────────────────┐     ┌────────────┐
-│  pg_cron    │ ──► │ Edge Functions  │ ──► │ notification-service │ ──► │ PostgreSQL │
-│  (Postgres) │     │   (Supabase)    │     │      (Fastify)       │     │   (RLS)    │
-└─────────────┘     └─────────────────┘     └──────────────────────┘     └────────────┘
-                                                                               ▲
-                                                                               │
-                                                                         ┌─────┴─────┐
-                                                                         │ apps/web  │
-                                                                         │ (SELECT)  │
-                                                                         └───────────┘
-```
-
-**Responsabilidades:**
-- **Este serviço:** Recebe payload das Edge Functions → INSERT na BD
-- **apps/web:** Apenas SELECT com RLS (sem chamada HTTP a este serviço)
-
----
-
-## Contrato com Edge Functions
-
-### Requisitos
-
-- **Contrato estável** — HTTP ou evento, documentado e testável
-- **OpenAPI ou tipos partilhados** — para desenvolvimento independente do frontend
-- **Versionamento** — alterações de contrato devem ser comunicadas
-
-### Exemplo de Payload
-
-```typescript
-interface CreateNotificationPayload {
-  tenant_id: string
-  event_id: string
-  recipient_ids: string[]
-  type: 'event_created' | 'event_updated' | 'event_reminder'
-  metadata?: Record<string, unknown>
-}
-```
-
----
-
-## Isolamento Multi-tenant
-
-### Regras Obrigatórias
-
-1. **Sempre incluir `tenant_id`** em todas as inserções
-2. **Autenticação explícita** — validar origem do pedido (Edge Functions)
-3. **Nunca confiar** em dados do payload sem validação
-4. **RLS ativo** — mesmo com inserção direta, respeitar políticas
-
-### Validação de Entrada
-
-```typescript
-const createNotificationSchema = {
-  body: {
-    type: 'object',
-    required: ['tenant_id', 'event_id', 'recipient_ids', 'type'],
-    properties: {
-      tenant_id: { type: 'string', format: 'uuid' },
-      event_id: { type: 'string', format: 'uuid' },
-      recipient_ids: { type: 'array', items: { type: 'string', format: 'uuid' } },
-      type: { type: 'string', enum: ['event_created', 'event_updated', 'event_reminder'] }
-    }
-  }
-}
-```
-
----
-
-## Regras de Domínio
-
-### Notificações e Eventos
-
-- Notificações estão **associadas ao domínio de eventos** (GE)
-- **Audiência** respeita âmbitos: empresa, departamento, colaboradores específicos
-- Criar notificação apenas para **destinatários válidos** dentro da audiência do evento
-
-### Estados
-
-- `unread` — notificação criada, não visualizada
-- `read` — utilizador marcou como lida
-- Retenção e limpeza a definir na implementação
-
----
+Serviços internos devem alinhar com o modelo de confiança do produto: autenticação/autorização explícitas, dados escopados por tenant; ver [docs/SECURITY.md](../../docs/SECURITY.md) (incl. secção sobre serviços internos). Complementar com políticas e RLS em [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md).
 
 ## Testes
 
-| Tipo | Ferramenta | Obrigatório para |
-|------|------------|------------------|
-| Unitários | Vitest | Regras de negócio, validações de payload |
-| Integração | Vitest + Fastify inject | Rotas e contratos HTTP |
-| Contrato | Tipos partilhados | Compatibilidade com Edge Functions |
+Vitest no monorepo; para Fastify, usar `inject()` e padrões descritos na skill abaixo.
 
-### Princípio
+## Skill (boas práticas Fastify)
 
-- Testável **sem depender do frontend**
-- Contrato testável com mocks das Edge Functions
+Consultar antes de implementar ou rever rotas, plugins, validação, erros, logging ou integração com base de dados:
 
----
+[../../.agents/skills/fastify-best-practices/SKILL.md](../../.agents/skills/fastify-best-practices/SKILL.md)
 
-## Estrutura Sugerida
-
-```
-apps/notification-service/
-├── src/
-│   ├── app.ts              # Configuração Fastify
-│   ├── routes/
-│   │   └── notifications.ts
-│   ├── plugins/
-│   │   ├── database.ts     # Conexão PostgreSQL
-│   │   └── auth.ts         # Validação de origem
-│   ├── schemas/
-│   │   └── notification.ts
-│   └── services/
-│       └── notification.service.ts
-├── test/
-│   ├── routes/
-│   └── services/
-├── package.json
-└── tsconfig.json
-```
-
----
-
-## Referências
-
-- [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md) — Planta técnica e pipeline
-- [docs/ENGINEERING.md](../../docs/ENGINEERING.md) — Stack e convenções
-- [docs/SECURITY.md](../../docs/SECURITY.md) — Políticas de segurança
-- [docs/PROPOSAL.md](../../docs/PROPOSAL.md) — Regras de negócio (audiência, eventos)
+Ordem de leitura sugerida na própria skill (ex.: plugins → routes → schemas → error-handling → logging → configuração).

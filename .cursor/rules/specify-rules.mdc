@@ -1,0 +1,36 @@
+---
+description: Project Development Guidelines
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# intranet-curso Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2026-04-07
+
+## Active Technologies
+
+- TypeScript 5.x (Next.js 16.2.2, React 19.2.4) + Next.js, React, Tailwind CSS 4, Shadcn UI (radix-luma, zinc), Phosphor icons (001-e01-interface-navegacao)
+
+## Project Structure
+
+```text
+backend/
+frontend/
+tests/
+```
+
+## Commands
+
+npm test && npm run lint
+
+## Code Style
+
+TypeScript 5.x (Next.js 16.2.2, React 19.2.4): Follow standard conventions
+
+## Recent Changes
+
+- 001-e01-interface-navegacao: Added TypeScript 5.x (Next.js 16.2.2, React 19.2.4) + Next.js, React, Tailwind CSS 4, Shadcn UI (radix-luma, zinc), Phosphor icons
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->
